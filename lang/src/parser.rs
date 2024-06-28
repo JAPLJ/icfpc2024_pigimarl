@@ -29,7 +29,7 @@ fn parse_int(s: &[u8]) -> Result<u64> {
 }
 
 fn parse_str(s: &[u8]) -> Result<String> {
-    const MAP: &[u8] = r##"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%&'()*+,-./:;<=>?@[\]^_`|~ \n"##.as_bytes();
+    const MAP: &[u8] = concat!(r##"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%&'()*+,-./:;<=>?@[\]^_`|~ "##, '\n').as_bytes();
     let mut chs = Vec::with_capacity(s.len());
     for i in 0..s.len() {
         chs.push(MAP[(s[i] - b'!') as usize]);
