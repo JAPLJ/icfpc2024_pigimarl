@@ -7,6 +7,9 @@ const MAP: &[u8] = concat!(r##"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 fn cult_to_human(s: &[u8]) -> Result<String> {
     let mut chs = Vec::with_capacity(s.len());
     for i in 0..s.len() {
+        if s[i] < b'!' || s[i] > b'~' {
+            bail!("Invalid character: {}", s[i]);
+        }
         chs.push(MAP[(s[i] - b'!') as usize]);
     }
     Ok(String::from_utf8(chs)?)
@@ -46,9 +49,9 @@ async fn post(body: &[u8]) -> Result<String> {
 async fn comm(msg: web::Path<String>) -> impl Responder {
     let mut body = human_to_cult(&msg).unwrap();
     body.insert(0, b'S');
-    let resp = post(&body).await;
-    if resp.is_err() {
-        return HttpResponse::InternalServerError().body("not string");
+    let resp = post(&body).await.unwrap();
+    if resp.as_bytes()[0] != b'S' {
+        return HttpResponse::BadRequest().body("not string: ".to_string() + &resp);
     }
     let resp_human = cult_to_human(resp[1..].as_bytes()).unwrap();
     HttpResponse::Ok().body(resp_human)
