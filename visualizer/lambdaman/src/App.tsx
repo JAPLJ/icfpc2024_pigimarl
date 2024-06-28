@@ -34,7 +34,7 @@ function App() {
         className="filedInput"
         onChange={(e) => {
           const f = e.target.value
-          setField(f.split('\n').map((line) => line.split('') as CellType[]))
+          setField(f.split('\n').map((line) => line.split('') as CellType[]).filter((line) => line.length > 0))
         }}
       />
 
