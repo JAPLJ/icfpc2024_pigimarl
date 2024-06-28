@@ -48,10 +48,10 @@ class Expr:
         return BinaryOp(".", self, other)
 
     def take(self, other):
-        return BinaryOp("T", self, other)
+        return BinaryOp("T", other, self)
 
     def drop(self, other):
-        return BinaryOp("D", self, other)
+        return BinaryOp("D", other, self)
 
     def __call__(self, other):
         return BinaryOp("$", self, other)
@@ -125,3 +125,9 @@ class Var(Expr):
 
     def __str__(self):
         return f"v{self.v}"
+
+
+def fundef(args, body):
+    if not args:
+        return body
+    return Lambda(args[0], fundef(args[1:], body))
