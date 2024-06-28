@@ -114,7 +114,9 @@ impl<'a> Parser<'a> {
                 if let Some(nn) = vn.get(&n) {
                     Ok((Absyn::Var(*nn), s + 1))
                 } else {
-                    bail!("variable not found: {}", n);
+                    // (completely) free variable
+                    Ok((Absyn::Var(u64::MAX), s + 1))
+                    // bail!("variable not found: {}", n);
                 }
             }
             _ => bail!("unexpected token: {}", ind as char),
@@ -136,5 +138,12 @@ mod tests {
     #[test]
     fn test_parse_str() {
         assert_eq!(parse_str(b"B%,,/}Q/2,$_").unwrap(), "Hello World!");
+    }
+
+    #[test]
+    fn test_complicated() {
+        let prog = r##"B$ B$ L" B$ L# B$ v" B$ v# v# L# B$ v" B$ v# v# L" L# ? B= v# I! I" B$ L$ B+ B$ v" v$ B$ v" v$ B- v# I" I%"##;
+        let ast = parse(prog).unwrap();
+        eprintln!("{}", ast);
     }
 }
