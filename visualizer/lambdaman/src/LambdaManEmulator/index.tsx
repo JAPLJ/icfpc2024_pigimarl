@@ -77,6 +77,45 @@ export const LambdaManEmulator = (props: LambdaManEmulatorProps) => {
     setAnimation(moves.join(""));
   }, [props.field, moves]);
 
+  const onFastReplay = useCallback(() => {
+    const newField = structuredClone(props.field);
+    let newPosition = findPosition(newField);
+
+    const fastMove = (x: number, y: number) => {
+      if (x < 0 || x >= newField.length || y < 0 || y >= newField[0].length) {
+        return false;
+      }
+      if (newField[x][y] === "#") {
+        return false;
+      }
+      if (newField[x][y] === ".") {
+        newField[x][y] = " ";
+      }
+      newPosition = [x, y];
+      return true;
+    };
+
+    for (let i = 0; i < moves.length; i++) {
+      switch (moves[i]) {
+        case "U":
+          fastMove(newPosition[0] - 1, newPosition[1]);
+          break;
+        case "D":
+          fastMove(newPosition[0] + 1, newPosition[1]);
+          break;
+        case "L":
+          fastMove(newPosition[0], newPosition[1] - 1);
+          break;
+        case "R":
+          fastMove(newPosition[0], newPosition[1] + 1);
+          break;
+      }
+    }
+    setField(newField);
+    setPosition(newPosition);
+  }, [props, moves]);
+
+
   const animate = () => {
     if (animation.length === 0) {
       return;
@@ -138,6 +177,7 @@ export const LambdaManEmulator = (props: LambdaManEmulatorProps) => {
           <label>Animation Delay</label>
           <input type="range" min={0} max={1000} value={delay} onChange={(e) => setDelay(parseInt(e.target.value))} />
           <button onClick={onReplay}>Replay</button>
+          <button onClick={onFastReplay}>Fast Replay</button>
           <button onClick={() => setAnimation("")}>Stop</button>
         </div>
         <div>
