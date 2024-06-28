@@ -70,6 +70,20 @@ export const LambdaManEmulator = ({ field }: LambdaManEmulatorProps) => {
     ref.current?.focus();
   }, [ref]);
 
+  const problemNumberRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (problemNumberRef.current && problemNumber) {
+      localStorage.setItem("problemNumber", problemNumber.toString());
+    }
+  }, [problemNumber]);
+
+  useEffect(() => {
+    const storedProblemNumber = localStorage.getItem("problemNumber");
+    if (storedProblemNumber) {
+      setProblemNumber(parseInt(storedProblemNumber));
+      problemNumberRef.current!.value = storedProblemNumber;
+    }
+  }, []);
 
   return (
     <div onKeyUp={onKeyUp} autoFocus ref={ref} tabIndex={0}>
@@ -82,7 +96,7 @@ export const LambdaManEmulator = ({ field }: LambdaManEmulatorProps) => {
         </div>
         <div>
           <label>Problem Number</label>
-          <input className="problemNumber" type="number" value={problemNumber} onChange={(e) => setProblemNumber(parseInt(e.target.value))} />
+          <input ref={problemNumberRef} className="problemNumber" type="number" value={problemNumber} onChange={(e) => setProblemNumber(parseInt(e.target.value))} />
         </div>
         <a href={`http://localhost:8080/solve%20lambdaman${problemNumber}%20${moves.join("")}`} target={"blank"} >submit</a>
       </div>
