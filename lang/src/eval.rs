@@ -163,14 +163,14 @@ impl Evaluator {
                             }
                         }
                         BOp::Take => {
-                            if let (Val::Str(s), Val::Int(n)) = (&va, &vb) {
+                            if let (Val::Int(n), Val::Str(s)) = (&va, &vb) {
                                 Ok((Val::Str(s.chars().take(*n as usize).collect()), c))
                             } else {
                                 bail!("[Take] unexpected values: {:?}, {:?}", va, vb)
                             }
                         }
                         BOp::Drop => {
-                            if let (Val::Str(s), Val::Int(n)) = (&va, &vb) {
+                            if let (Val::Int(n), Val::Str(s)) = (&va, &vb) {
                                 Ok((Val::Str(s.chars().skip(*n as usize).collect()), c))
                             } else {
                                 bail!("[Drop] unexpected values: {:?}, {:?}", va, vb)
