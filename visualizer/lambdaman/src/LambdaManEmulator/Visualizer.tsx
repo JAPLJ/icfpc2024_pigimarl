@@ -21,7 +21,7 @@ const Cell = (props: { cell: CellType, isLambdaManHere: boolean }) => {
       backgroundColor = "yellow";
       break;
     case " ":
-      backgroundColor = "white";
+      backgroundColor = "gray";
       break;
   }
 
