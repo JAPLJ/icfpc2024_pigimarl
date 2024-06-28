@@ -17,14 +17,24 @@
 .cell {
     display: inline-block;
     width: 30px;
-    height: 30px;
     border: 1px solid black;
     text-align: center;
     line-height: 30px;
     color: black;
+    overflow: hidden;
+    aspect-ratio: 1;
 }
 
 .filedInput {
     width: 600px;
     height: 100px;
+}
+
+.moves {
+    width: 600px;
+    height: 100px;
+}
+
+.problemNumber {
+    width: 30px;
 }

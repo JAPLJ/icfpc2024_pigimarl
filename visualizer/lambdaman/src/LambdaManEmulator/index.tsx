@@ -19,6 +19,7 @@ export const LambdaManEmulator = ({ field }: LambdaManEmulatorProps) => {
   };
   const [position, setPosition] = useState<[number, number]>([0, 0]);
   const [moves, setMoves] = useState<string[]>([]);
+  const [problemNumber, setProblemNumber] = useState<number>(0);
 
   useEffect(() => {
     setPosition(findPosition(field));
@@ -75,10 +76,15 @@ export const LambdaManEmulator = ({ field }: LambdaManEmulatorProps) => {
       <Visualizer field={field} position={position!} />
       <div>
         <h2>Moves</h2>
-        <textarea value={moves.join("")} readOnly />
+        <textarea className="moves" value={moves.join("")} readOnly />
         <div>
           <button onClick={() => navigator.clipboard.writeText(moves.join(""))}>Copy</button>
         </div>
+        <div>
+          <label>Problem Number</label>
+          <input className="problemNumber" type="number" value={problemNumber} onChange={(e) => setProblemNumber(parseInt(e.target.value))} />
+        </div>
+        <a href={`http://localhost:8080/solve%20lambdaman${problemNumber}%20${moves.join("")}`} target={"blank"} >submit</a>
       </div>
     </div>
   );
