@@ -13,7 +13,7 @@ struct Parser<'a> {
 pub fn parse(input: &str) -> Result<Absyn> {
     let toks = input
         .trim()
-        .split(' ')
+        .split_whitespace()
         .map(|s| s.as_bytes())
         .collect::<Vec<_>>();
     let mut parser = Parser { toks, alpha: 0 };
@@ -28,13 +28,33 @@ fn parse_int(s: &[u8]) -> Result<u64> {
     Ok(n)
 }
 
-fn parse_str(s: &[u8]) -> Result<String> {
+pub fn parse_str(s: &[u8]) -> Result<String> {
     const MAP: &[u8] = concat!(r##"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%&'()*+,-./:;<=>?@[\]^_`|~ "##, '\n').as_bytes();
     let mut chs = Vec::with_capacity(s.len());
     for i in 0..s.len() {
         chs.push(MAP[(s[i] - b'!') as usize]);
     }
     Ok(String::from_utf8(chs)?)
+}
+
+pub fn invert_str(s: &str) -> String {
+    const MAP: &[u8] = concat!(r##"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%&'()*+,-./:;<=>?@[\]^_`|~ "##, '\n').as_bytes();
+    let mut chs = Vec::with_capacity(s.len());
+    for i in 0..s.len() {
+        chs.push(MAP.iter().position(|&c| c == s.as_bytes()[i]).unwrap() as u8 + b'!');
+    }
+    String::from_utf8(chs).unwrap()
+}
+
+pub fn str_from_int(n: u64) -> String {
+    let mut s = Vec::new();
+    let mut n = n;
+    while n > 0 {
+        s.push((n % 94) as u8 + b'!');
+        n /= 94;
+    }
+    s.reverse();
+    String::from_utf8(s).unwrap()
 }
 
 fn parse_uop(c: u8) -> Result<UOp> {
@@ -133,6 +153,11 @@ mod tests {
         assert_eq!(parse_int(b"!").unwrap(), 0);
         assert_eq!(parse_int(b"\"").unwrap(), 1);
         assert_eq!(parse_int(b"/6").unwrap(), 1337);
+    }
+
+    #[test]
+    fn test_str_from_int() {
+        assert_eq!(str_from_int(15818151), "test");
     }
 
     #[test]

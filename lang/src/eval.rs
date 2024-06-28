@@ -1,4 +1,7 @@
-use crate::ast::{Absyn, BOp, UOp, Val};
+use crate::{
+    ast::{Absyn, BOp, UOp, Val},
+    parser,
+};
 use anyhow::{bail, Result};
 use rpds::HashTrieMap;
 
@@ -61,15 +64,24 @@ impl Evaluator {
                     }
                     UOp::StrToInt => {
                         if let Val::Str(s) = v {
-                            let n = s.parse::<i64>()?;
-                            Ok((Val::Int(n), c))
+                            let is = parser::invert_str(&s);
+                            let mut n = 0;
+                            for c in is.chars() {
+                                n = n * 94 + (c as u64 - 33);
+                            }
+                            Ok((Val::Int(n as i64), c))
                         } else {
                             bail!("[StrToInt] unexpected value: {:?}", v)
                         }
                     }
                     UOp::IntToStr => {
                         if let Val::Int(n) = v {
-                            Ok((Val::Str(n.to_string()), c))
+                            Ok((
+                                Val::Str(parser::parse_str(
+                                    parser::str_from_int(n as u64).as_bytes(),
+                                )?),
+                                c,
+                            ))
                         } else {
                             bail!("[IntToStr] unexpected value: {:?}", v)
                         }
