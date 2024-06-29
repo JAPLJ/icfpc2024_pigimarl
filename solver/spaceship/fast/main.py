@@ -1,21 +1,33 @@
 import os
-from itertools import zip_longest
+from itertools import product
 
 
 def solve(points):
     sorted_points = sorted(points, key=lambda x: x[1])
-    print(sorted_points[0:10])
 
     commands = []
     x, y = 0, 0
     vx, vy = 0, 0
     for point in sorted_points:
-        x_move, vx = calc_move1d(x, point[0], vx)
-        y_move, vy = calc_move1d(y, point[1], vy)
+        x_move, vx_ = calc_move1d(x, point[0], vx)
+        y_move, vy_ = calc_move1d(y, point[1], vy)
+        length = max(len(x_move), len(y_move))
+        for li in range(length, length + 100):
+            vxi, vyi = vx, vy
+            x_movei, vxi = move_on_time(x, point[0], vx, li)
+            y_movei, vyi = move_on_time(y, point[1], vy, li)
+            if x_movei and y_movei:
+                vx = vxi
+                vy = vyi
+                x_move = x_movei
+                y_move = y_movei
+                break
+        if not x_move or not y_move:
+            raise RuntimeError("no solution", x, y, point[0], point[1], vx, vy)
         moves = join_xy_moves(x_move, y_move)
         commands.append("".join(moves))
         x, y = point
-    print("\n".join(commands))
+    return commands
 
 
 # s から t まで最速で移動する
@@ -51,11 +63,26 @@ def calc_move1d(s, t, v):
         dp[diff][1] = -dp[diff][1]
     return dp[diff]
 
+
+# s から t まで length 時間で移動する
+def move_on_time(s, t, v, length):
+    for p in product([-1, 0, 1], repeat=length):
+        pos = s
+        vi = v
+        for dv in p:
+            vi += dv
+            pos += vi
+        if pos == t:
+            return [list(p), vi]
+    return [None, None]
+    # raise RuntimeError("no solution", s, t, v, length)
+
+
 # x と y の移動を結合する
 # x_move, y_move はそれぞれ x, y 方向の移動
 def join_xy_moves(x_move, y_move):
     moves = []
-    for x, y in zip_longest(x_move, y_move):
+    for x, y in zip(x_move, y_move):
         x = x or 0
         y = y or 0
         if x == 0 and y == 0:
@@ -86,5 +113,8 @@ if __name__ == "__main__":
     fname = os.path.join(os.path.dirname(__file__), "../../../problems/spaceship/06.txt")
     with open(fname, "r") as f:
         for line in f:
+            if line.strip() == "":
+                continue
             points.append(list(map(int, line.strip().split())))
-    solve(points)
+    commands = solve(points)
+    print("".join(commands))
