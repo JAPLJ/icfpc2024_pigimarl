@@ -31,7 +31,7 @@ FA = (f, nth, dirs, r, n)
 randomwalk = fundef(
     FA,
     If(
-        n == Int(0),
+        n == Int(200000),
         Str(""),
         plus(
             FA,
@@ -96,7 +96,7 @@ randomwalk = fundef(
 )
 randomwalk = fix(randomwalk)
 
-args = [str_nth, Str("RDLU"), Int(1), Int(800000)]
+args = [str_nth, Str("RDLU"), Int(1664991), Int(1000000)]
 res = randomwalk
 for a in args:
     res = res(a)
