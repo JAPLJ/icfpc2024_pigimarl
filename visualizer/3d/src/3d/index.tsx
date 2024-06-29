@@ -19,18 +19,25 @@ export const ThreeDEmulator = ({ initialField }: ThreeDEmulatorProps) => {
   }, [initialField, valA, valB]);
 
   const initialize = () => {
+    if (initialField.length === 0) {
+      return;
+    }
     setError(null);
     setAnswer(null);
     setTick(0);
-    const field = initialField.map(row => row.map(cell => {
+    const h = initialField.length;
+    const w = initialField[0].length;
+    const field = Array.from(Array(h + 2), () => Array(w + 2).fill("."));
+    initialField.map((row, i) => row.map((cell, j) => {
       if (cell === "A") {
-        return valA;
+        field[i + 1][j + 1] = valA;
       } else if (cell === "B") {
-        return valB;
+        field[i + 1][j + 1] = valB;
       } else if (!Number.isNaN(parseInt(cell))) {
-        return parseInt(cell);
+        field[i + 1][j + 1] = parseInt(cell);
+      } else {
+        field[i + 1][j + 1] = cell;
       }
-      return cell;
     }));
     setFieldHist([field]);
   }
