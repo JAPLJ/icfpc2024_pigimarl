@@ -9,14 +9,6 @@ function App() {
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const parser = new Parser();
 
-  // useEffect(() => {
-  //   if (fieldRef.current) {
-  //     // fieldRef.current.value = 'B$ B$ L" B$ L# B$ v" B$ v# v# L# B$ v" B$ v# v# L$ L% ? B< v% I# I" B+ B$ v$ B- v% I" B$ v$ B- v% I# II';
-  //     // fieldRef.current.value = '? B> I# I$ S9%3 S./';
-  //     // fieldRef.current.value = 'I/6';
-  //   }
-  // }, []);
-
   return (
     <>
       <h1>ICFP</h1>

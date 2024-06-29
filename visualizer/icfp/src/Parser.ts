@@ -1,7 +1,5 @@
 import {
   Token,
-  BINARY_OPERATORS,
-  INDICATORS,
   Tree,
 } from 'src/types'
 
@@ -31,6 +29,14 @@ export class Parser {
     return this.tokens[this.index++];
   }
 
+  private parseInt(body: Token): number {
+    let result = 0;
+    for (let i = 0; i < body.length; i++) {
+      result = result * 94 + body[i].charCodeAt(0) - 33;
+    }
+    return result;
+  }
+
   private parseTree(): Tree | undefined {
     const token = this.getNextToken();
     if (token === null) {
@@ -42,50 +48,58 @@ export class Parser {
     if (indicator === "T" || indicator === "F") {
       return {
         value: indicator === "T",
+        type: indicator as "T" | "F",
       };
     }
     if (indicator === "I") {
-      let result = 0;
-      for (let i = 0; i < body.length; i++) {
-        result = result * 94 + body[i].charCodeAt(0) - 33;
-      }
       return {
-        value: `int ${result}`,
+        value: this.parseInt(body),
+        type: "I",
       };
     }
     if (indicator === "S") {
-      // const strMap = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%&\'()*+,-./:;<=>?@[\]^_`|~ \n';
+      const strMap = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%&\'()*+,-./:;<=>?@[\]^_`|~ \n';
+      const chars = []
+      for (let i = 0; i < body.length; i++) {
+        chars.push(strMap[body[i].charCodeAt(0) - 33]);
+      }
       return {
-        value: `str ${body}`,
+        value: `"${chars.join('')}"`,
+        type: "S",
       };
     }
     if (indicator === "U") {
       return {
         value: `u ${body}`,
         nodes: [this.parseTree()!],
+        type: "U",
       };
     }
     if (indicator === "B") {
       return {
         value: `b ${body}`,
         nodes: [this.parseTree()!, this.parseTree()!],
+        type: "B",
       };
     }
     if (indicator === "?") {
       return {
         value: "if",
         nodes: [this.parseTree()!, this.parseTree()!, this.parseTree()!],
+        type: "?",
       };
     }
     if (indicator === "L") {
       return {
-        value: `lambda ${body}`,
+        value: `λ${this.parseInt(body)}`,
         nodes: [this.parseTree()!],
+        type: "L",
       };
     }
     if (indicator === "v") {
       return {
-        value: `v${body}`,
+        value: `v${this.parseInt(body)}`,
+        type: "v",
       };
     }
     console.error("Unknown indicator", indicator);

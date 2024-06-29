@@ -9,7 +9,7 @@ export const ICFPTree = ({ tree }: ICFPTreeProps) => {
     return <div />;
   }
   return (
-    <div className="tree">
+    <div className={`tree ${tree.type}`}>
       <div className="value">
         {tree?.value}
       </div>
