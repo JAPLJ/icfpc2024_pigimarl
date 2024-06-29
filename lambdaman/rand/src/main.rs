@@ -1,7 +1,9 @@
+use rayon::{prelude::*, ThreadPoolBuilder};
 use std::{
     collections::VecDeque,
-    fs,
+    fmt::{Display, Write},
     io::{self, BufWriter},
+    sync::{Arc, RwLock},
 };
 
 fn input() -> (Vec<Vec<u8>>, usize, usize) {
@@ -35,21 +37,83 @@ struct Env {
 const DIR: [(usize, usize); 4] = [(0, 1), (1, 0), (0, !0), (!0, 0)];
 const DIRC: [char; 4] = ['R', 'D', 'L', 'U'];
 
+trait Rng: Display {
+    fn next4(&mut self) -> usize;
+}
+
+struct LCGRng {
+    x: usize,
+    a: usize,
+    b: usize,
+    m: usize,
+}
+
+impl LCGRng {
+    fn new(x: usize, a: usize, b: usize, m: usize) -> Self {
+        Self { x, a, b, m }
+    }
+}
+
+impl Rng for LCGRng {
+    fn next4(&mut self) -> usize {
+        self.x = (self.x * self.a + self.b) % self.m;
+        self.x / 1000 % 4
+    }
+}
+
+impl Display for LCGRng {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "LCGRng({}, {}, {}, {})", self.x, self.a, self.b, self.m)
+    }
+}
+
+struct Rng2Step<R> {
+    rng: R,
+    step: usize,
+    prev: usize,
+}
+
+impl<R: Rng> Rng2Step<R> {
+    fn new(mut rng: R) -> Self {
+        let init = rng.next4();
+        Self {
+            rng,
+            step: 0,
+            prev: init,
+        }
+    }
+}
+
+impl<R: Rng> Rng for Rng2Step<R> {
+    fn next4(&mut self) -> usize {
+        if self.step % 2 == 1 {
+            self.prev = self.rng.next4();
+        } else {
+            self.step += 1;
+        }
+        self.prev
+    }
+}
+
+impl<R: Rng> Display for Rng2Step<R> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Rng2Step({}, {})", self.rng, self.step)
+    }
+}
+
 impl Env {
-    fn try_randomwalk(&self, a: usize, b: usize, steps: usize) -> Vec<Vec<bool>> {
+    fn try_randomwalk(&self, mut rng: impl Rng, steps: usize) -> Vec<Vec<bool>> {
         let mut r = self.sr;
         let mut c = self.sc;
         let mut visited = vec![vec![false; self.w]; self.h];
         visited[r][c] = true;
 
-        let mut rng = 1;
         for _ in 0..steps {
-            rng = (rng * a + b) % 2usize.pow(32);
-            let d = (rng / 1000) % 4;
+            let d = rng.next4();
             let (dr, dc) = DIR[d];
             let nr = r + dr;
             let nc = c + dc;
-            if self.f[nr][nc] != b'.' {
+            if nr >= self.h || nc >= self.w || self.f[nr][nc] != b'.' {
                 continue;
             }
             r = nr;
@@ -61,48 +125,38 @@ impl Env {
         visited
     }
 
-    fn try_randomwalk2(&self, a: usize, b: usize, steps: usize) -> Vec<Vec<bool>> {
+    fn try_randomwalk2(&self, mut rng: impl Rng, steps: usize) -> Vec<Vec<bool>> {
         let mut r = self.sr;
         let mut c = self.sc;
         let mut visited = vec![vec![false; self.w]; self.h];
         visited[r][c] = true;
 
-        let mut rng = 1;
-        for _ in 0..steps / 2 {
-            rng = (rng * a + b) % 2usize.pow(32);
-            for _ in 0..2 {
-                let d = (rng / 1000) % 4;
-                let (dr, dc) = DIR[d];
-                let nr = r + dr;
-                let nc = c + dc;
-                if self.f[nr][nc] != b'.' {
-                    continue;
-                }
-                r = nr;
-                c = nc;
-                if !visited[r][c] {
-                    visited[r][c] = true;
-                }
+        for _ in 0..steps {
+            let d = rng.next4();
+            let (dr, dc) = DIR[d];
+            let nr = r + dr;
+            let nc = c + dc;
+            if nr >= self.h || nc >= self.w || self.f[nr][nc] != b'.' {
+                continue;
+            }
+            r = nr;
+            c = nc;
+            if !visited[r][c] {
+                visited[r][c] = true;
             }
         }
         visited
     }
 
-    fn try_full_randomwalk(&self, a: usize, b: usize) -> Result<usize, usize> {
+    fn try_full_randomwalk(&self, mut rng: impl Rng) -> Result<usize, usize> {
         let mut r = self.sr;
         let mut c = self.sc;
         let mut visited = vec![vec![false; self.w]; self.h];
         visited[r][c] = true;
         let mut count = 1;
 
-        let mut rng = 1;
         for step in 1..=999000 {
-            if step % 2 == 1 {
-                rng = (rng * a + b) % 2usize.pow(32);
-            } else {
-                // rng = rng + 1000;
-            }
-            let d = (rng / 1000) % 4;
+            let d = rng.next4();
             let (dr, dc) = DIR[d];
             let nr = r + dr;
             let nc = c + dc;
@@ -141,7 +195,7 @@ impl Env {
         }
     }
 
-    fn randomwalk_with_fix(&self, vm: &mut Vec<Vec<bool>>, a: usize, b: usize) {
+    fn randomwalk_with_fix(&self, vm: &mut Vec<Vec<bool>>, mut rng: impl Rng) {
         let mut r = self.sr;
         let mut c = self.sc;
         let mut visited = vec![vec![false; self.w]; self.h];
@@ -154,7 +208,8 @@ impl Env {
         let mut w = BufWriter::new(file);
         let mut iw = BufWriter::new(info_file);
 
-        let mut rng = 1;
+        writeln!(iw, "{}", rng).unwrap();
+
         let mut fix = VecDeque::new();
         let mut step = 1000000;
         while step >= 1 {
@@ -188,27 +243,24 @@ impl Env {
                 continue;
             }
 
-            rng = (rng * a + b) % 2usize.pow(32);
-            for _ in 0..2 {
-                let d = (rng / 1000) % 4;
-                let (dr, dc) = DIR[d];
-                let nr = r + dr;
-                let nc = c + dc;
-                write!(w, "{}", DIRC[d]).unwrap();
-                step -= 1;
-                if nr >= self.h || nc >= self.w || self.f[nr][nc] != b'.' {
-                    continue;
-                }
-                r = nr;
-                c = nc;
-                if !visited[r][c] {
-                    visited[r][c] = true;
-                    count += 1;
-                }
-                if count == self.all {
-                    writeln!(iw, "{}", step).unwrap();
-                    return;
-                }
+            let d = rng.next4();
+            let (dr, dc) = DIR[d];
+            let nr = r + dr;
+            let nc = c + dc;
+            write!(w, "{}", DIRC[d]).unwrap();
+            step -= 1;
+            if nr >= self.h || nc >= self.w || self.f[nr][nc] != b'.' {
+                continue;
+            }
+            r = nr;
+            c = nc;
+            if !visited[r][c] {
+                visited[r][c] = true;
+                count += 1;
+            }
+            if count == self.all {
+                writeln!(iw, "{}", step).unwrap();
+                return;
             }
         }
     }
@@ -263,76 +315,52 @@ fn main() {
     };
     eprintln!("{} {}", sr, sc);
 
+    ThreadPoolBuilder::new()
+        .num_threads(8)
+        .build_global()
+        .unwrap();
+
     // let route = fs::read_to_string("out.txt").unwrap();
     // env.check(&route);
 
-    // let mut max = 0;
-    // let mut maxa = 0;
-    // let mut maxb = 0;
-    // for a in (10001..20000).step_by(2) {
-    //     eprintln!("{}", a);
-    //     for b in 1..=100 {
-    //         let res = env.try_full_randomwalk(1664524 + a, b);
-    //         if let Ok(step) = res {
-    //             println!("{} {}", a, b);
-    //             println!("{}", step);
-    //             return;
-    //         } else if let Err(cnt) = res {
-    //             if cnt > max {
-    //                 eprintln!("{} -> {} / {} ({}, {})", max, cnt, env.all, a, b);
-    //                 max = cnt;
-    //                 maxa = a;
-    //                 maxb = b;
-    //                 let mut vm = env.try_randomwalk2(1664524 + maxa, maxb, 999000);
-    //                 env.randomwalk_with_fix(&mut vm, 1664524 + maxa, maxb);
-    //             }
-    //         }
-    //     }
-    // }
-    // eprintln!("max: {} ({}, {})", max, maxa, maxb);
+    struct MaxInfo {
+        max: usize,
+        maxa: usize,
+        maxb: usize,
+    }
 
-    let maxa = 18541;
-    let maxb = 30;
+    let mi = RwLock::new(MaxInfo {
+        max: 0,
+        maxa: 0,
+        maxb: 0,
+    });
 
-    eprintln!("{:?}", env.try_full_randomwalk(1664524 + maxa, maxb));
+    const M: usize = 2usize.pow(32);
+    let a: Vec<usize> = (1..=999999).step_by(2).collect();
+    a.into_par_iter().for_each(|a| {
+        eprintln!("{}", a);
+        for b in 1..=100 {
+            let res = env.try_full_randomwalk(LCGRng::new(1, 1664524 + a, b, M));
+            if let Ok(step) = res {
+                println!("{} {}", a, b);
+                println!("{}", step);
+                return;
+            } else if let Err(cnt) = res {
+                let mut mi = mi.write().unwrap();
+                if cnt > mi.max {
+                    eprintln!("{} -> {} / {} ({}, {})", mi.max, cnt, env.all, a, b);
+                    *mi = MaxInfo {
+                        max: cnt,
+                        maxa: a,
+                        maxb: b,
+                    };
+                    let mut vm = env.try_randomwalk2(LCGRng::new(1, 1664524 + a, b, M), 999000);
+                    env.randomwalk_with_fix(&mut vm, LCGRng::new(1, 1664524 + a, b, M));
+                }
+            }
+        }
+    });
 
-    let mut vm = env.try_randomwalk2(1664524 + maxa, maxb, 999000);
-    env.randomwalk_with_fix(&mut vm, 1664524 + maxa, maxb);
-
-    // let mut vismap1 = vec![];
-    // for a in (1..=100).step_by(2) {
-    //     eprintln!("MAP1 {}", a);
-    //     for b in 1..=100 {
-    //         let vismap = env.try_randomwalk(a, b, 250000);
-    //         vismap1.push((a, b, vismap));
-    //     }
-    // }
-    // let mut vismap2 = vec![];
-    // for a in (101..=150).step_by(2) {
-    //     eprintln!("MAP2 {}", a);
-    //     for b in 101..=200 {
-    //         let vismap = env.try_randomwalk(a, b, 500000);
-    //         vismap2.push((a, b, vismap));
-    //     }
-    // }
-
-    // for (a1, b1, vm1) in vismap1 {
-    //     eprintln!("{} {}", a1, b1);
-    //     for (a2, b2, vm2) in &vismap2 {
-    //         let mut ok = true;
-    //         'outer: for r in 0..h {
-    //             for c in 0..w {
-    //                 if env.f[r][c] == b'.' && !vm1[r][c] && !vm2[r][c] {
-    //                     ok = false;
-    //                     break 'outer;
-    //                 }
-    //             }
-    //         }
-    //         if ok {
-    //             println!("{} {}", a1, b1);
-    //             println!("{} {}", a2, b2);
-    //             return;
-    //         }
-    //     }
-    // }
+    let mi = mi.read().unwrap();
+    eprintln!("max: {} ({}, {})", mi.max, mi.maxa, mi.maxb);
 }
