@@ -12,22 +12,65 @@ const parse: (field: string) => Point[] = (field) => {
   return points
 }
 
+const calcTrail: (moves: number[]) => Point[] = (moves) => {
+  let dx = 0, dy = 0, x = 0, y = 0;
+  const trails: Point[] = [[x, y]];
+  for(let i = 0; i < moves.length; i++) {
+    const move = moves[i];
+    if ([7, 8, 9].includes(move)) {
+      dy += 1;
+    }
+    if ([1, 2, 3].includes(move)) {
+      dy -= 1;
+    }
+    if ([1, 4, 7].includes(move)) {
+      dx -= 1;
+    }
+    if ([3, 6, 9].includes(move)) {
+      dx += 1;
+    }
+    x += dx;
+    y += dy;
+    trails.push([x, y]);
+  }
+  return trails;
+}
+
 function App() {
   const [points, setPoints] = useState<Point[]>();
+  const [trails, setTrails] = useState<Point[]>();
   const fieldRef = useRef<HTMLTextAreaElement>(null);
+  const moveRef = useRef<HTMLTextAreaElement>(null);
 
   return (
     <>
       <h1>Spaceship</h1>
-      <textarea
-        ref={fieldRef}
-        className="input"
-        onChange={(e) => {
-          const f = e.target.value
-          setPoints(parse(f))
-        }}
-      />
-      <Spaceship points={points || []} />
+      <div className="wrapper">
+        <div>
+          <h2>Field</h2>
+          <textarea
+            ref={fieldRef}
+            className="input"
+            onChange={(e) => {
+              const f = e.target.value
+              setPoints(parse(f))
+            }}
+          />
+        </div>
+        <div>
+          <h2>Move</h2>
+          <textarea
+            ref={moveRef}
+            className="input"
+            onChange={(e) => {
+              const f = e.target.value;
+              const moves = f.split('').map(Number);
+              setTrails(calcTrail(moves));
+            }}
+          />
+        </div>
+      </div>
+      <Spaceship points={points || []} trails={trails} />
     </>
   )
 }
