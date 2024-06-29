@@ -1,0 +1,62 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.input {
+    width: 600px;
+    height: 100px;
+}
+
+.tree {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    border: 1px solid green;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.nodes {
+    width: 95%;
+    display: flex;
+    align-items: start;
+    justify-content: center;
+}
+
+
+.field {
+    display: flex;
+    flex-direction: column;
+
+    .row {
+        display: flex;
+    }
+}
+
+.cell {
+    display: inline-block;
+    width: 30px;
+    border: 1px solid black;
+    text-align: center;
+    line-height: 30px;
+    color: black;
+    overflow: hidden;
+    aspect-ratio: 1;
+}
+
+.filedInput {
+    width: 600px;
+    height: 100px;
+}
+
+.moves {
+    width: 600px;
+    height: 100px;
+}
+
+.problemNumber {
+    width: 30px;
+}
