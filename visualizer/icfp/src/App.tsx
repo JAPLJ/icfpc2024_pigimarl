@@ -1,11 +1,11 @@
 import './App.css'
-import { Token } from 'src/types'
+import { Token, Tree } from 'src/types'
 import { ICFPTree } from 'src/ICFPTree'
 import { Parser } from 'src/Parser'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 
 function App() {
-  const [tree, setTree] = useState<Token[]>();
+  const [tree, setTree] = useState<Tree>();
   const fieldRef = useRef<HTMLTextAreaElement>(null);
   const parser = new Parser();
 
@@ -21,7 +21,7 @@ function App() {
         }}
       />
       <div className="output">
-        <ICFPTree tree={tree} />
+        <ICFPTree tree={tree!} />
       </div>
     </>
   )

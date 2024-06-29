@@ -11,7 +11,6 @@ export class Parser {
     this.index = 0;
     this.tokens = this.tokenize(input);
     const tree = this.parseTree();
-    console.log(tree);
     return tree!;
   }
 
@@ -44,10 +43,9 @@ export class Parser {
     }
     const indicator = token[0];
     const body = token.slice(1);
-    console.log(indicator, "body", body);
     if (indicator === "T" || indicator === "F") {
       return {
-        value: indicator === "T",
+        value: indicator === "T" ? "true" : "false",
         type: indicator as "T" | "F",
       };
     }

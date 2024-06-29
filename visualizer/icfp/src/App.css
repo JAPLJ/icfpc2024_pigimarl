@@ -33,7 +33,7 @@
         min-width: 50px;
     }
 
-    .T .F {
+    .T,.F {
         border-color: #e5b567;
         color: #e5b567;
     }
