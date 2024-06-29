@@ -4,12 +4,13 @@ import { ScatterPlot } from 'src/Spaceship/LightScatterPlot'
 
 type SpaceshipProps = {
   points: Point[];
+  trails?: Point[];
 };
 
-export const Spaceship = ({ points }: SpaceshipProps) => {
+export const Spaceship = ({ points, trails }: SpaceshipProps) => {
 
   return <div className="spaceship">
-    <ScatterPlot points={points} />
+    <ScatterPlot points={points} trails={trails}/>
   </div>
 };
 
