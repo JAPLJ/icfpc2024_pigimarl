@@ -10,6 +10,7 @@ export class Parser {
   private index = 0;
 
   public parse(input: string): Tree {
+    this.index = 0;
     this.tokens = this.tokenize(input);
     const tree = this.parseTree();
     console.log(tree);
@@ -49,24 +50,24 @@ export class Parser {
         result = result * 94 + body[i].charCodeAt(0) - 33;
       }
       return {
-        value: `integer ${result}`,
+        value: `int ${result}`,
       };
     }
     if (indicator === "S") {
       // const strMap = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!"#$%&\'()*+,-./:;<=>?@[\]^_`|~ \n';
       return {
-        value: `string ${body}`,
+        value: `str ${body}`,
       };
     }
     if (indicator === "U") {
       return {
-        value: `unary ${body}`,
+        value: `u ${body}`,
         nodes: [this.parseTree()!],
       };
     }
     if (indicator === "B") {
       return {
-        value: `binary ${body}`,
+        value: `b ${body}`,
         nodes: [this.parseTree()!, this.parseTree()!],
       };
     }
@@ -84,9 +85,9 @@ export class Parser {
     }
     if (indicator === "v") {
       return {
-        value: `variable ${body}`,
+        value: `v${body}`,
       };
     }
+    console.error("Unknown indicator", indicator);
   }
-
 }

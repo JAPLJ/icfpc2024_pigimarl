@@ -7,8 +7,7 @@ import { useState, useEffect, useRef } from 'react'
 function App() {
   const [tree, setTree] = useState<Token[]>();
   const fieldRef = useRef<HTMLTextAreaElement>(null);
-  const parser = useRef<Parser>(new Parser());
-  console.log(tree);
+  const parser = new Parser();
 
   // useEffect(() => {
   //   if (fieldRef.current) {
@@ -26,10 +25,12 @@ function App() {
         className="input"
         onChange={(e) => {
           const f = e.target.value
-          setTree(parser.current.parse(f))
+          setTree(parser.parse(f))
         }}
       />
-      <ICFPTree tree={tree} />
+      <div className="output">
+        <ICFPTree tree={tree} />
+      </div>
     </>
   )
 }

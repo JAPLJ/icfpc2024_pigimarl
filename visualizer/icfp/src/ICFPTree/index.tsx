@@ -10,7 +10,7 @@ export const ICFPTree = ({ tree }: ICFPTreeProps) => {
   }
   return (
     <div className="tree">
-      <div>
+      <div className="value">
         {tree?.value}
       </div>
       <div className="nodes">
