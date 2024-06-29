@@ -30,13 +30,15 @@ export const ScatterPlot = ({ points, trails }: SpaceshipProps) => {
     {
       label: 'Points',
       data: points.map(([x, y]) => ({ x, y })),
-      backgroundColor: 'rgba(255, 99, 132, 1)',
+      backgroundColor: '#fff',
+      pointRadius: 4,
       order: 3,
     },
     {
       label: 'original',
       data: [[0, 0]],
       backgroundColor: 'rgba(54, 162, 235, 1)',
+      pointRadius: 4,
       order: 2,
     },
   ];
@@ -44,7 +46,6 @@ export const ScatterPlot = ({ points, trails }: SpaceshipProps) => {
     dataSets.push({
       label: 'Trails',
       data: trails.map(([x, y]) => ({ x, y })),
-      // backgroundColor: lineargradient || 'rgba(75, 192, 192, 1)',
       backgroundColor: gradient,
       pointStyle: 'triangle',
       pointRadius: 4,
