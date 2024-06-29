@@ -10,24 +10,25 @@ fix = Lambda(f, Lambda(x, f(x(x)))(Lambda(x, f(x(x)))))
 
 z = Var("z")
 n = Var("n")
-str_nth = fundef((z, n), z.drop(n).take(Int(1)))
+# str_nth = fundef((z, n), z.drop(n).take(Int(1)))
 
-nth = Var("a")
+# nth = Var("a")
 r = Var("r")
 dirs = Var("D")
 randomwalk = fundef(
-    (f, nth, dirs, r, n),
+    (f, r, n),
     If(
         n == Int(0),
         Str(""),
-        nth(dirs)(r / Int(1000) % Int(4)).concat(
-            f(nth)(dirs)((r * Int(1664525) + Int(10)) % Int(2**32))(n - Int(1))
-        ),
+        Str("RDLU")
+        .drop(r / Int(1000) % Int(4))
+        .take(Int(1))
+        .concat(f((r * Int(1664525) + Int(10)) % Int(2**32))(n - Int(1))),
     ),
 )
 randomwalk = fix(randomwalk)
 
-args = [str_nth, Str("RDLU"), Int(1), Int(500000)]
+args = [Int(1), Int(500000)]
 res = randomwalk
 for a in args:
     res = res(a)

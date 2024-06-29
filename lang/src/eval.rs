@@ -141,6 +141,13 @@ impl Evaluator {
                     }
                 } else {
                     let (va, ca) = self.eval(a)?;
+                    if *op == BOp::LOr && va == Val::Bool(true) {
+                        return Ok((Val::Bool(true), ca));
+                    }
+                    if *op == BOp::LAnd && va == Val::Bool(false) {
+                        // eprintln!("short circuit AND");
+                        return Ok((Val::Bool(false), ca));
+                    }
                     let (vb, cb) = self.eval(b)?;
                     let c = ca + cb;
                     match op {

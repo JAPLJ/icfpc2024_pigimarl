@@ -61,6 +61,33 @@ impl Env {
         visited
     }
 
+    fn try_randomwalk2(&self, a: usize, b: usize, steps: usize) -> Vec<Vec<bool>> {
+        let mut r = self.sr;
+        let mut c = self.sc;
+        let mut visited = vec![vec![false; self.w]; self.h];
+        visited[r][c] = true;
+
+        let mut rng = 1;
+        for _ in 0..steps / 2 {
+            rng = (rng * a + b) % 2usize.pow(32);
+            for _ in 0..2 {
+                let d = (rng / 1000) % 4;
+                let (dr, dc) = DIR[d];
+                let nr = r + dr;
+                let nc = c + dc;
+                if self.f[nr][nc] != b'.' {
+                    continue;
+                }
+                r = nr;
+                c = nc;
+                if !visited[r][c] {
+                    visited[r][c] = true;
+                }
+            }
+        }
+        visited
+    }
+
     fn try_full_randomwalk(&self, a: usize, b: usize) -> Result<usize, usize> {
         let mut r = self.sr;
         let mut c = self.sc;
@@ -70,7 +97,11 @@ impl Env {
 
         let mut rng = 1;
         for step in 1..=999000 {
-            rng = (rng * a + b) % 2usize.pow(32);
+            if step % 2 == 1 {
+                rng = (rng * a + b) % 2usize.pow(32);
+            } else {
+                // rng = rng + 1000;
+            }
             let d = (rng / 1000) % 4;
             let (dr, dc) = DIR[d];
             let nr = r + dr;
@@ -119,11 +150,14 @@ impl Env {
 
         use std::io::Write;
         let file = std::fs::File::create("out.txt").unwrap();
+        let info_file = std::fs::File::create("info.txt").unwrap();
         let mut w = BufWriter::new(file);
+        let mut iw = BufWriter::new(info_file);
 
         let mut rng = 1;
         let mut fix = VecDeque::new();
-        for step in (1..=1000000).rev() {
+        let mut step = 1000000;
+        while step >= 1 {
             if !fix.is_empty() {
                 let d: usize = fix.pop_front().unwrap();
                 let (dr, dc) = DIR[d];
@@ -132,12 +166,15 @@ impl Env {
                     visited[r][c] = true;
                     count += 1;
                 }
-                println!("{} {}", step, DIRC[d]);
+                // println!("{} {}", step, DIRC[d]);
                 write!(w, "{}", DIRC[d]).unwrap();
+                step -= 1;
                 continue;
             }
             self.push_fix(vm, &mut fix, r, c);
             if !fix.is_empty() {
+                let dirs = fix.iter().map(|&d| DIRC[d]).collect::<String>();
+                writeln!(iw, "{} {}", step, dirs).unwrap();
                 let d: usize = fix.pop_front().unwrap();
                 let (dr, dc) = DIR[d];
                 (r, c) = (r + dr, c + dc);
@@ -145,29 +182,33 @@ impl Env {
                     visited[r][c] = true;
                     count += 1;
                 }
-                println!("{} {}", step, DIRC[d]);
+                // println!("{} {}", step, DIRC[d]);
                 write!(w, "{}", DIRC[d]).unwrap();
+                step -= 1;
                 continue;
             }
 
             rng = (rng * a + b) % 2usize.pow(32);
-            let d = (rng / 1000) % 4;
-            let (dr, dc) = DIR[d];
-            let nr = r + dr;
-            let nc = c + dc;
-            write!(w, "{}", DIRC[d]).unwrap();
-            if nr >= self.h || nc >= self.w || self.f[nr][nc] != b'.' {
-                continue;
-            }
-            r = nr;
-            c = nc;
-            if !visited[r][c] {
-                visited[r][c] = true;
-                count += 1;
-            }
-            if count == self.all {
-                println!("{}", step);
-                return;
+            for _ in 0..2 {
+                let d = (rng / 1000) % 4;
+                let (dr, dc) = DIR[d];
+                let nr = r + dr;
+                let nc = c + dc;
+                write!(w, "{}", DIRC[d]).unwrap();
+                step -= 1;
+                if nr >= self.h || nc >= self.w || self.f[nr][nc] != b'.' {
+                    continue;
+                }
+                r = nr;
+                c = nc;
+                if !visited[r][c] {
+                    visited[r][c] = true;
+                    count += 1;
+                }
+                if count == self.all {
+                    writeln!(iw, "{}", step).unwrap();
+                    return;
+                }
             }
         }
     }
@@ -222,13 +263,13 @@ fn main() {
     };
     eprintln!("{} {}", sr, sc);
 
-    let route = fs::read_to_string("out.txt").unwrap();
-    env.check(&route);
+    // let route = fs::read_to_string("out.txt").unwrap();
+    // env.check(&route);
 
     // let mut max = 0;
     // let mut maxa = 0;
     // let mut maxb = 0;
-    // for a in (401..500).step_by(2) {
+    // for a in (10001..20000).step_by(2) {
     //     eprintln!("{}", a);
     //     for b in 1..=100 {
     //         let res = env.try_full_randomwalk(1664524 + a, b);
@@ -238,19 +279,24 @@ fn main() {
     //             return;
     //         } else if let Err(cnt) = res {
     //             if cnt > max {
-    //                 eprintln!("{} -> {} ({}, {})", max, cnt, a, b);
+    //                 eprintln!("{} -> {} / {} ({}, {})", max, cnt, env.all, a, b);
     //                 max = cnt;
     //                 maxa = a;
     //                 maxb = b;
+    //                 let mut vm = env.try_randomwalk2(1664524 + maxa, maxb, 999000);
+    //                 env.randomwalk_with_fix(&mut vm, 1664524 + maxa, maxb);
     //             }
     //         }
     //     }
     // }
     // eprintln!("max: {} ({}, {})", max, maxa, maxb);
-    let maxa = 449;
-    let maxb = 18;
 
-    let mut vm = env.try_randomwalk(1664524 + maxa, maxb, 999000);
+    let maxa = 18541;
+    let maxb = 30;
+
+    eprintln!("{:?}", env.try_full_randomwalk(1664524 + maxa, maxb));
+
+    let mut vm = env.try_randomwalk2(1664524 + maxa, maxb, 999000);
     env.randomwalk_with_fix(&mut vm, 1664524 + maxa, maxb);
 
     // let mut vismap1 = vec![];

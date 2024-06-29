@@ -53,6 +53,59 @@ pub enum Absyn {
     Var(u64),
 }
 
+impl Absyn {
+    pub fn pretty(&self) -> String {
+        let mut s = String::new();
+        self.pretty_aux(&mut s, 0);
+        s
+    }
+
+    fn pretty_aux(&self, s: &mut String, indent: usize) {
+        match self {
+            Absyn::Value(v) => {
+                s.push_str(&format!("{}", v));
+            }
+            Absyn::UnaryOp(op, a) => {
+                s.push_str(&format!("({} ", op));
+                a.pretty_aux(s, indent);
+                s.push_str(")");
+            }
+            Absyn::BinOp(op, a, b) => {
+                if *op == BOp::Apply || *op == BOp::LazyApply || *op == BOp::StrictApply {
+                    s.push_str(&format!("("));
+                    a.pretty_aux(s, indent);
+                    s.push_str(" ");
+                    b.pretty_aux(s, indent);
+                    s.push_str(")");
+                } else {
+                    s.push_str("(");
+                    a.pretty_aux(s, indent);
+                    s.push_str(&format!(" {} ", op));
+                    b.pretty_aux(s, indent);
+                    s.push_str(")");
+                }
+            }
+            Absyn::If(a, b, c) => {
+                s.push_str(&format!("(if "));
+                a.pretty_aux(s, indent);
+                s.push_str(" then ");
+                b.pretty_aux(s, indent);
+                s.push_str(" else ");
+                c.pretty_aux(s, indent);
+                s.push_str(")");
+            }
+            Absyn::Lambda(v, e) => {
+                s.push_str(&format!("(\\v{} -> ", *v));
+                e.pretty_aux(s, indent);
+                s.push_str(")");
+            }
+            Absyn::Var(v) => {
+                s.push_str(&format!("v{}", v));
+            }
+        }
+    }
+}
+
 impl fmt::Display for Val {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {

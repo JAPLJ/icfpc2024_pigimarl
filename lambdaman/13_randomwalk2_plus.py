@@ -22,8 +22,8 @@ def plus(c, fr, to, path, otherwise):
 
 
 BASE_A = 1664524
-A = 1061
-B = 84
+A = 18541
+B = 30
 
 r = Var("r")
 dirs = Var("D")
@@ -32,54 +32,26 @@ FA = (f, dirs, r, n)
 randomwalk = fundef(
     FA,
     If(
-        n == Int(9000),
+        n == Int(55000),
         Str(""),
         plus(
             FA,
-            954944 - 4 + 1,
-            954944,
-            "DDUU",
+            397596 - 4 + 1,
+            397596,
+            "LLRR",
             plus(
                 FA,
-                954820 - 8 + 1,
-                954820,
-                "UURRLLDD",
+                369920 - 4 + 1,
+                369920,
+                "RRLL",
                 plus(
                     FA,
-                    954408 - 4 + 1,
-                    954408,
+                    367590 - 4 + 1,
+                    367590,
                     "LLRR",
-                    plus(
-                        FA,
-                        804842 - 4 + 1,
-                        804842,
-                        "UUDD",
-                        plus(
-                            FA,
-                            804836 - 4 + 1,
-                            804836,
-                            "RRLL",
-                            plus(
-                                FA,
-                                804830 - 4 + 1,
-                                804830,
-                                "RRLL",
-                                plus(
-                                    FA,
-                                    802578 - 4 + 1,
-                                    802578,
-                                    "UUDD",
-                                    dirs.drop(r / Int(1000) % Int(4) * Int(2))
-                                    .take(Int(2))
-                                    .concat(
-                                        f(dirs)((r * Int(BASE_A + A) + Int(B)) % Int(2**32))(
-                                            n - Int(2)
-                                        )
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
+                    dirs.drop(r / Int(1000) % Int(4) * Int(2))
+                    .take(Int(2))
+                    .concat(f(dirs)((r * Int(BASE_A + A) + Int(B)) % Int(2**32))(n - Int(2))),
                 ),
             ),
         ),
