@@ -83,6 +83,8 @@ fn parse_bop(c: u8) -> Result<BOp> {
         b'T' => Ok(BOp::Take),
         b'D' => Ok(BOp::Drop),
         b'$' => Ok(BOp::Apply),
+        b'~' => Ok(BOp::LazyApply),
+        b'!' => Ok(BOp::StrictApply),
         _ => bail!("unexpected binary operator: {}", c as char),
     }
 }

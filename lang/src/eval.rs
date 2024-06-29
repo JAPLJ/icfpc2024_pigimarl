@@ -1,5 +1,7 @@
+use std::{cell::RefCell, rc::Rc};
+
 use crate::{
-    ast::{Absyn, BOp, UOp, Val},
+    ast::{Absyn, BOp, Thunk, UOp, Val},
     parser,
 };
 use anyhow::{bail, Result};
@@ -44,7 +46,21 @@ impl Evaluator {
         }
         self.limit -= 1;
         match ast {
-            Absyn::Value(v) => Ok((v.clone(), 0)),
+            Absyn::Value(v) => {
+                if let Val::Thunk(t) = v {
+                    let (xv, c) = {
+                        let t = t.borrow();
+                        match &*t {
+                            Thunk::Value(v) => (*v.clone(), 0),
+                            Thunk::Thunk(e) => self.eval(e)?,
+                        }
+                    };
+                    *t.borrow_mut() = Thunk::Value(Box::new(xv.clone()));
+                    Ok((xv, c + 1))
+                } else {
+                    Ok((v.clone(), 0))
+                }
+            }
             Absyn::UnaryOp(op, a) => {
                 let (v, c) = self.eval(a)?;
                 match op {
@@ -97,6 +113,31 @@ impl Evaluator {
                         Ok((r, ca + c + 1))
                     } else {
                         bail!("[Apply] unexpected value: {:?}", a)
+                    }
+                } else if *op == BOp::LazyApply {
+                    let (va, ca) = self.eval(a)?;
+                    if let Val::Lambda(v, body) = va {
+                        let bbody = self.subst_clone(
+                            &body,
+                            v,
+                            &Absyn::Value(Val::Thunk(Rc::new(RefCell::new(Thunk::Thunk(
+                                Box::new(*b.clone()),
+                            ))))),
+                        );
+                        let (r, c) = self.eval(&bbody)?;
+                        Ok((r, ca + c + 1))
+                    } else {
+                        bail!("[LazyApply] unexpected value: {:?}", a)
+                    }
+                } else if *op == BOp::StrictApply {
+                    let (va, ca) = self.eval(a)?;
+                    if let Val::Lambda(v, body) = va {
+                        let (rb, cb) = self.eval(b)?;
+                        let bbody = self.subst(&body, v, &Absyn::Value(rb));
+                        let (r, c) = self.eval(&bbody)?;
+                        Ok((r, ca + cb + c + 1))
+                    } else {
+                        bail!("[StrictApply] unexpected value: {:?}", a)
                     }
                 } else {
                     let (va, ca) = self.eval(a)?;
@@ -240,6 +281,35 @@ impl Evaluator {
         }
     }
 
+    fn subst_clone(&mut self, e: &Absyn, v: u64, b: &Absyn) -> Absyn {
+        match e {
+            Absyn::Value(v) => Absyn::Value(v.clone()),
+            Absyn::UnaryOp(op, a) => Absyn::UnaryOp(*op, Box::new(self.subst(a, v, b))),
+            Absyn::BinOp(op, a1, a2) => Absyn::BinOp(
+                *op,
+                Box::new(self.subst(a1, v, b)),
+                Box::new(self.subst(a2, v, b)),
+            ),
+            Absyn::If(a1, a2, a3) => Absyn::If(
+                Box::new(self.subst(a1, v, b)),
+                Box::new(self.subst(a2, v, b)),
+                Box::new(self.subst(a3, v, b)),
+            ),
+            Absyn::Lambda(x, body) => Absyn::Lambda(*x, Box::new(self.subst(body, v, b))),
+            Absyn::Var(x) => {
+                if *x == v {
+                    if let Absyn::Value(Val::Thunk(t)) = b {
+                        Absyn::Value(Val::Thunk(t.clone()))
+                    } else {
+                        b.clone()
+                    }
+                } else {
+                    Absyn::Var(*x)
+                }
+            }
+        }
+    }
+
     fn rename(&mut self, e: &Absyn, env: &Env) -> Absyn {
         match e {
             Absyn::Value(v) => Absyn::Value(v.clone()),
@@ -313,6 +383,27 @@ mod test {
         let prog = r##"B$ B$ Lf B$ Lx B$ vf B$ vx vx Lx B$ vf B$ vx vx Lg Ln ? B= vn I! I" B* vn B$ vg B- vn I" I&"##;
         let (val, _) = test_eval(prog);
         assert_eq!(val, Val::Int(120));
+    }
+
+    #[test]
+    fn test_strict_fact() {
+        let prog = r##"B! B! Lf B! Lx B! vf Lv B! B! vx vx vv Lx B! vf Lv B! B! vx vx vv Lg Ln ? B= vn I! I" B* vn B! vg B- vn I" I&"##;
+        let (val, _) = test_eval(prog);
+        assert_eq!(val, Val::Int(120));
+    }
+
+    #[test]
+    fn test_lazy_fact() {
+        let prog = r##"B~ B~ Lf B~ Lx B~ vf B~ vx vx Lx B~ vf B~ vx vx Lg Ln ? B= vn I! I" B* vn B~ vg B- vn I" I&"##;
+        let (val, _) = test_eval(prog);
+        assert_eq!(val, Val::Int(120));
+    }
+
+    #[test]
+    fn test_lazy_apply() {
+        let prog = r##"B~ Lx B+ vx vx B+ I" I""##;
+        let (val, _) = test_eval(prog);
+        assert_eq!(val, Val::Int(4));
     }
 
     #[test]

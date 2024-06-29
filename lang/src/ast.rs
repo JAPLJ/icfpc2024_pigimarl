@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{cell::RefCell, fmt, rc::Rc};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Val {
@@ -6,6 +6,13 @@ pub enum Val {
     Int(i64),
     Str(String),
     Lambda(u64, Box<Absyn>),
+    Thunk(Rc<RefCell<Thunk>>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Thunk {
+    Value(Box<Val>),
+    Thunk(Box<Absyn>),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -32,6 +39,8 @@ pub enum BOp {
     Take,
     Drop,
     Apply,
+    LazyApply,
+    StrictApply,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -51,6 +60,7 @@ impl fmt::Display for Val {
             Val::Int(n) => write!(f, "{}", n),
             Val::Str(s) => write!(f, "{}", s),
             Val::Lambda(v, _) => write!(f, "<lambda {}>", v),
+            Val::Thunk(_) => write!(f, "<thunk>"),
         }
     }
 }
@@ -83,6 +93,8 @@ impl fmt::Display for BOp {
             BOp::Take => write!(f, "T"),
             BOp::Drop => write!(f, "D"),
             BOp::Apply => write!(f, "$"),
+            BOp::LazyApply => write!(f, "~"),
+            BOp::StrictApply => write!(f, "!"),
         }
     }
 }
