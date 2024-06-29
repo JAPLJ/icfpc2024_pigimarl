@@ -201,10 +201,12 @@ export const ThreeDEmulator = ({ initialField }: ThreeDEmulatorProps) => {
     <div>
       <div>
         <h2>Values</h2>
-        <label>Val A</label>
-        <input type="number" value={valA} onChange={onChangeValA} />
-        <label>Val B</label>
-        <input type="number" value={valB} onChange={onChangeValB} />
+        <div>
+          <label>Val A</label>
+          <input type="number" value={valA} onChange={onChangeValA} /><br />
+          <label>Val B</label>
+          <input type="number" value={valB} onChange={onChangeValB} />
+        </div>
       </div>
       <div>
         <button onClick={nextTick} disabled={answer !== null && error === null}>Next</button>

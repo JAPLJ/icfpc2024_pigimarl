@@ -26,15 +26,7 @@
 }
 
 .fieldInput {
-    width: 600px;
-    height: 100px;
-}
-
-.moves {
-    width: 600px;
-    height: 100px;
-}
-
-.problemNumber {
-    width: 30px;
+    width: 300px;
+    height: 300px;
+    font-family: Menlo, Monaco, 'Courier New', monospace;
 }
