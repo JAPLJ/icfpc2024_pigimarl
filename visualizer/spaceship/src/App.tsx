@@ -64,7 +64,7 @@ function App() {
             className="input"
             onChange={(e) => {
               const f = e.target.value;
-              const moves = f.split('').map(Number);
+              const moves = f.split('').filter((c) => c !== '\n').map(Number);
               setTrails(calcTrail(moves));
             }}
           />
