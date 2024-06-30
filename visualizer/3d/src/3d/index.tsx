@@ -8,6 +8,7 @@ type ThreeDEmulatorProps = {
 
 export const ThreeDEmulator = ({ initialField }: ThreeDEmulatorProps) => {
   const [tick, setTick] = useState(0);
+  const [totalTick, setTotalTick] = useState(0);
   const [valA, setValA] = useState(0);
   const [valB, setValB] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -25,6 +26,7 @@ export const ThreeDEmulator = ({ initialField }: ThreeDEmulatorProps) => {
     setError(null);
     setAnswer(null);
     setTick(0);
+    setTotalTick(0);
     const h = initialField.length;
     const w = initialField[0].length;
     const field = Array.from(Array(h + 2), () => Array(w + 2).fill("."));
@@ -195,6 +197,7 @@ export const ThreeDEmulator = ({ initialField }: ThreeDEmulatorProps) => {
     }
     setFieldHist([...fieldHist, nextField]);
     setTick(tick + 1);
+    setTotalTick((t) => t + 1);
   }
 
   return (
@@ -212,9 +215,10 @@ export const ThreeDEmulator = ({ initialField }: ThreeDEmulatorProps) => {
         <button onClick={nextTick} disabled={answer !== null && error === null}>Next</button>
         <button onClick={initialize}>Reset</button>
       </div>
-      <div>Tick: {tick + 1}</div>
+      <div>T: {tick + 1}</div>
+      <div>Tick: {totalTick}</div>
       <div>Answer: {answer !== null ? answer : "null"}</div>
-      {error && <div>error: {error}</div>}
+      <div>Error: {error !== null ? error : "null"}</div>
       <Visualizer field={fieldHist[tick]} />
     </div>
   );
