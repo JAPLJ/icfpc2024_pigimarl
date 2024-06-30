@@ -1,9 +1,9 @@
 use rayon::{prelude::*, ThreadPoolBuilder};
 use std::{
     collections::VecDeque,
-    fmt::{Display, Write},
+    fmt::Display,
     io::{self, BufWriter},
-    sync::{Arc, RwLock},
+    sync::RwLock,
 };
 
 fn input() -> (Vec<Vec<u8>>, usize, usize) {
@@ -41,6 +41,30 @@ trait Rng: Display {
     fn next4(&mut self) -> usize;
 }
 
+struct SimpleRng {
+    a: usize,
+    x: usize,
+}
+
+impl SimpleRng {
+    fn new(a: usize, x: usize) -> Self {
+        Self { a, x }
+    }
+}
+
+impl Display for SimpleRng {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "SimpleRng({}, {})", self.a, self.x)
+    }
+}
+
+impl Rng for SimpleRng {
+    fn next4(&mut self) -> usize {
+        self.x = (self.x * self.a) % 2147483647;
+        self.x % 4
+    }
+}
+
 struct LCGRng {
     x: usize,
     a: usize,
@@ -74,23 +98,24 @@ struct Rng2Step<R> {
 }
 
 impl<R: Rng> Rng2Step<R> {
-    fn new(mut rng: R) -> Self {
-        let init = rng.next4();
+    fn new(rng: R) -> Self {
         Self {
             rng,
             step: 0,
-            prev: init,
+            prev: 0,
         }
     }
 }
 
 impl<R: Rng> Rng for Rng2Step<R> {
     fn next4(&mut self) -> usize {
-        if self.step % 2 == 1 {
+        if self.step % 2 == 0 {
             self.prev = self.rng.next4();
-        } else {
-            self.step += 1;
         }
+        // if self.step % 6 < 2 || self.step % 6 == 3 {
+        //     self.prev = self.rng.next4();
+        // }
+        self.step += 1;
         self.prev
     }
 }
@@ -205,8 +230,10 @@ impl Env {
         use std::io::Write;
         let file = std::fs::File::create("out.txt").unwrap();
         let info_file = std::fs::File::create("info.txt").unwrap();
+        let raw_file = std::fs::File::create("raw.txt").unwrap();
         let mut w = BufWriter::new(file);
         let mut iw = BufWriter::new(info_file);
+        let mut rw = BufWriter::new(raw_file);
 
         writeln!(iw, "{}", rng).unwrap();
 
@@ -248,6 +275,7 @@ impl Env {
             let nr = r + dr;
             let nc = c + dc;
             write!(w, "{}", DIRC[d]).unwrap();
+            write!(rw, "{}", DIRC[d]).unwrap();
             step -= 1;
             if nr >= self.h || nc >= self.w || self.f[nr][nc] != b'.' {
                 continue;
@@ -335,31 +363,64 @@ fn main() {
         maxb: 0,
     });
 
-    const M: usize = 2usize.pow(32);
-    let a: Vec<usize> = (1..=999999).step_by(2).collect();
-    a.into_par_iter().for_each(|a| {
-        eprintln!("{}", a);
-        for b in 1..=100 {
-            let res = env.try_full_randomwalk(LCGRng::new(1, 1664524 + a, b, M));
+    (1..=1_000_000_000).into_par_iter().for_each(|a| {
+        // eprintln!("{}", a);
+        let mut xrng = SimpleRng::new(48271, a);
+        for _ in 0..100 {
+            xrng.next4();
+            let mult = (xrng.x * 2 + 1) % ((1 << 31) - 1);
+            let res = env.try_full_randomwalk(Rng2Step::new(SimpleRng::new(mult, a)));
             if let Ok(step) = res {
-                println!("{} {}", a, b);
-                println!("{}", step);
-                return;
+                let _mi = mi.write().unwrap();
+                println!("OK");
+                println!("{} {} {}", mult, a, step);
+                let mut vm = env.try_randomwalk2(Rng2Step::new(SimpleRng::new(mult, a)), 999000);
+                env.randomwalk_with_fix(&mut vm, Rng2Step::new(SimpleRng::new(mult, a)));
+                std::process::exit(0);
             } else if let Err(cnt) = res {
                 let mut mi = mi.write().unwrap();
                 if cnt > mi.max {
-                    eprintln!("{} -> {} / {} ({}, {})", mi.max, cnt, env.all, a, b);
+                    eprintln!("{} -> {} / {} ({}, {})", mi.max, cnt, env.all, mult, a);
                     *mi = MaxInfo {
                         max: cnt,
                         maxa: a,
-                        maxb: b,
+                        maxb: 0,
                     };
-                    let mut vm = env.try_randomwalk2(LCGRng::new(1, 1664524 + a, b, M), 999000);
-                    env.randomwalk_with_fix(&mut vm, LCGRng::new(1, 1664524 + a, b, M));
+                    let mut vm =
+                        env.try_randomwalk2(Rng2Step::new(SimpleRng::new(mult, a)), 999000);
+                    env.randomwalk_with_fix(&mut vm, Rng2Step::new(SimpleRng::new(mult, a)));
                 }
             }
         }
     });
+
+    // LCG
+    // const M: usize = 2usize.pow(32);
+    // let a: Vec<usize> = (1..=999999).step_by(2).collect();
+    // a.into_par_iter().for_each(|a| {
+    //     eprintln!("{}", a);
+    //     for b in 1..=100 {
+    //         let res = env.try_full_randomwalk((LCGRng::new(1, 1664524 + a, b, M)));
+    //         if let Ok(step) = res {
+    //             println!("OK");
+    //             println!("{} {}", 1664524 + a, b);
+    //             println!("{}", step);
+    //             std::process::exit(0);
+    //         } else if let Err(cnt) = res {
+    //             let mut mi = mi.write().unwrap();
+    //             if cnt > mi.max {
+    //                 eprintln!("{} -> {} / {} ({}, {})", mi.max, cnt, env.all, a, b);
+    //                 *mi = MaxInfo {
+    //                     max: cnt,
+    //                     maxa: a,
+    //                     maxb: b,
+    //                 };
+    //                 let mut vm = env.try_randomwalk2((LCGRng::new(1, 1664524 + a, b, M)), 999000);
+    //                 env.randomwalk_with_fix(&mut vm, (LCGRng::new(1, 1664524 + a, b, M)));
+    //             }
+    //         }
+    //     }
+    // });
 
     let mi = mi.read().unwrap();
     eprintln!("max: {} ({}, {})", mi.max, mi.maxa, mi.maxb);
