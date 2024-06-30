@@ -5,14 +5,16 @@ type VisualizerProps = {
   field: CellType[][];
 };
 
-const Cell = (props: { cell: CellType }) => {
+const Cell = (props: { cell: CellType, i: number, j: number }) => {
   let s = ".";
   if (typeof props.cell === "number") {
     s = props.cell.toString();
   } else if (typeof props.cell === "string") {
     s = props.cell;
   }
-  return <div className="cell">{ s }</div>;
+  return <div className="cell">{s}
+    <span className="tooltip">({props.i}, {props.j}) {s}</span>
+  </div>;
 };
 
 export const Visualizer = ({ field }: VisualizerProps) => {
@@ -21,10 +23,10 @@ export const Visualizer = ({ field }: VisualizerProps) => {
   }
   return (
     <div className="field">
-      {field.map((row, rowIndex) => (
-        <div className="row" key={rowIndex}>
-          {row.map(cell => (
-            <Cell cell={cell} />
+      {field.map((row, i) => (
+        <div className="row" key={i}>
+          {row.map((cell, j) => (
+            <Cell cell={cell} i={i} j={j} key={j} />
           ))}
         </div>
       ))}

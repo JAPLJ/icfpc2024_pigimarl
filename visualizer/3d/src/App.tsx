@@ -8,6 +8,7 @@ function App() {
 
   return (
     <>
+      <h1>3D Visualizer</h1>
       <h2>initial field</h2>
       <textarea
         className="fieldInput"
