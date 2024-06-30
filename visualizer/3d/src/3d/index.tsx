@@ -121,7 +121,7 @@ export const ThreeDEmulator = ({ initialField }: ThreeDEmulatorProps) => {
         }
       }
       if (cell === "/") {
-        if (isNumber(field[i][j - 1]) && isNumber(field[i - 1][j])) {
+        if (isNumber(field[i][j - 1]) && isNumber(field[i - 1][j]) && field[i - 1][j] !== 0) {
           nextField[i][j - 1] = '.';
           nextField[i - 1][j] = '.';
           write(i, j + 1, field[i][j - 1] / field[i - 1][j] | 0);
@@ -129,7 +129,7 @@ export const ThreeDEmulator = ({ initialField }: ThreeDEmulatorProps) => {
         }
       }
       if (cell === "%") {
-        if (isNumber(field[i][j - 1]) && isNumber(field[i - 1][j])) {
+        if (isNumber(field[i][j - 1]) && isNumber(field[i - 1][j]) && field[i - 1][j] !== 0) {
           nextField[i][j - 1] = '.';
           nextField[i - 1][j] = '.';
           write(i, j + 1, field[i][j - 1] % field[i - 1][j]);
