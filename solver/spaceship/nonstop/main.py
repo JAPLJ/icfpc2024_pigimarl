@@ -12,19 +12,40 @@ def solve(points):
         x_move, vx_ = calc_move1d(x, point[0], vx)
         y_move, vy_ = calc_move1d(y, point[1], vy)
         length = max(len(x_move), len(y_move))
-        if (x, y) == (-11, 207):
-            length = 3
-        if (x, y) == (-92, 287):
-            length = 3
-        if (x, y) == (-97, 301):
-            length = 4
-        if (x, y) == (-121, 350):
+        # 06
+        # if (x, y) == (-11, 207):
+        #     length = 3
+        # if (x, y) == (-92, 287):
+        #     length = 3
+        # if (x, y) == (-97, 301):
+        #     length = 4
+        # if (x, y) == (-121, 350):
+        #     length += 1
+        #  10
+        if (x, y) == (-189, -153):
+            length += 1
+        if (x, y) == (-631, -388):
+            length += 1
+        if (x, y) == (-1000, -579):
+            length += 1
+        if (x, y) == (-1038, -606):
+            length += 1
+        if (x, y) == (-1171, -544):
+            length += 1
+        if (x, y) == (-1228, -536):
+            length += 0
+        if (x, y) == (-1242, -531):
             length += 1
         for li in range(length, length + 100):
             vxi, vyi = vx, vy
-            if (x, y) == (-121, 350):
+            # 06
+            # if (x, y) == (-121, 350):
+            #     x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
+            #     y_movei, vyi = move_on_time(y, point[1], vy, li, 4)[3]
+            # 10
+            if (x, y) == (-1242, -531):
                 x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
-                y_movei, vyi = move_on_time(y, point[1], vy, li, 4)[3]
+                y_movei, vyi = move_on_time(y, point[1], vy, li, 4)[2]
             else:
                 x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
                 y_movei, vyi = move_on_time(y, point[1], vy, li)[0]
@@ -127,13 +148,13 @@ def join_xy_moves(x_move, y_move):
 
 if __name__ == "__main__":
     points = []
-    fname = os.path.join(os.path.dirname(__file__), "../../../problems/spaceship/06a.txt")
+    fname = os.path.join(os.path.dirname(__file__), "../../../problems/spaceship/10a.txt")
     with open(fname, "r") as f:
         for line in f:
             if line.strip() == "":
                 continue
             points.append(list(map(int, line.strip().split())))
-    # sorted_points = sorted(points, key=lambda x: x[1])
+    # sorted_points = sorted(points, key=lambda x: -x[0])
     # for p in sorted_points:
     #     print(p[0], p[1])
 
