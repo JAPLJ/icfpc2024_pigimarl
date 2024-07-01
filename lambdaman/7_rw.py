@@ -4,16 +4,16 @@ sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 
 from common.trans import *
 
-A = Int(1732529)
-B = Int(13)
-M = Int(4294967296)
+X = Int(48271)
+M = Int(2147483647)
 
 f = Var("f")
 r = Var("r")
 n = Var("n")
 x = Var("x")
 
-fix = Lambda(f, Lambda(x, f(x(x)))(Lambda(x, f(x(x)))))
+# fix = Lambda(f, Lambda(x, f(x(x)))(Lambda(x, f(x(x)))))
+fix = Lambda(f, Lambda(x, x(x))(Lambda(x, f(x(x)))))
 
 
 def plus(c, fr, to, path, otherwise):
@@ -29,28 +29,19 @@ def plus(c, fr, to, path, otherwise):
 FA = (f, r, n)
 
 randomwalk = fundef(
-    FA,
+    (f, r),
     If(
-        n == Int(0),
+        r == Int(1695999298),
         Str(""),
-        plus(
-            FA,
-            812962,
-            812963,
-            "UD",
-            Str("RDLU")
-            .drop(r / Int(1000) % Int(4))
-            .take(Int(1))
-            .concat(f((r * A + B) % M)(n - Int(1))),
-        ),
+        Str("RDLU").drop(r % Int(4)).take(Int(1)).concat(f(r * X % M)),
     ),
 )
 randomwalk = fix(randomwalk)
 
-args = [Int(1732542), Int(1000000)]
+args = [Int(1)]
 res = randomwalk
 for a in args:
     res = res(a)
 
-ans = Str("solve lambdaman21 ").concat(res)
+ans = Str("solve lambdaman7 ").concat(res)
 print(ans)

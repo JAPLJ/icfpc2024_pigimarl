@@ -13,12 +13,12 @@ x = Var("x")
 rep = Var("R")
 rep_fn = fundef((f, x), f(f(f(x))))
 
-d = Var("d")
-row = Var("O")
-row_fn = fundef((cat, rep, d), rep(cat)(d).concat(Str("D")))
+rep27 = Var("Q")
+rep27_fn = fundef((rep,), rep(cat_fn))(rep_fn)
 
-fill = fundef((row, cat, rep), rep(cat)(row(cat)(rep)(Str("RR")).concat(row(cat)(rep)(Str("LL")))))
-res = fill(row_fn)(cat_fn)(rep_fn)
+solve = fundef(
+    (rep27,), rep27(rep27(Str("RR")).concat(Str("D")).concat(rep27(Str("LL"))).concat(Str("D")))
+)
 
-ans = Str("solve lambdaman9 ").concat(res)
+ans = Str("solve lambdaman9 ").concat(solve(rep27_fn))
 print(ans)

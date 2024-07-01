@@ -7,7 +7,13 @@ from common.trans import *
 
 x = Var("x")
 f = Var("f")
-fix = Lambda(f, Lambda(x, f(x(x)))(Lambda(x, f(x(x)))))
+# fix = Lambda(f, Lambda(x, f(x(x)))(Lambda(x, f(x(x)))))
+fix = Lambda(f, Lambda(x, x(x))(Lambda(x, f(x(x)))))
+
+
+def fix1(f):
+    return Lambda(x, x(x))(Lambda(x, f(x(x))))
+
 
 F = Var("F")
 n = Var("n")
@@ -37,7 +43,7 @@ rec = fundef(
         ),
     ),
 )
-rec = fix(rec)
+rec = fix1(rec)
 
 res = rec(Str(""))(Int(1))(Str("R"))(Str("D"))(Str("L"))(Str("U"))
 ans = Str("solve lambdaman19 ").concat(res)
