@@ -1,14 +1,63 @@
 import os
 from itertools import product
+from collections import defaultdict, deque
 
 
-def solve(points):
-    FORECAST_LENGTH = 2
+class PathFinder:
+    vecs = [
+        (-1, -1), (0, -1), (1, -1),
+        (-1, 0), (0, 0), (1, 0),
+        (-1, 1), (0, 1), (1, 1),
+    ]
+    def __init__(self, points):
+        self.points_by_x = defaultdict(set)
+        for i, point in enumerate(points):
+            x, y = point
+            self.points_by_x[x].add(y)
+        self.count = sum(len(ys) for ys in self.points_by_x.values())
 
+    def get_next_point(self, x, y, vx, vy, t_max=3, area=3):
+        # 09
+        if (x, y) == (137, 165):
+            x, y = 136, 159
+        elif (x, y) == (135, 158):
+            x, y = 134, 162
+        elif (x, y) == (134, 162):
+            x, y = 133, 156
+        elif (x, y) == (81, 61):
+            x, y = 84, 65
+        for t in range(1, t_max + 1):
+            xi = x + vx * t
+            yi = y + vy * t
+            q = deque()
+            q.append((xi, yi))
+            visited = set()
+            while len(q) > 0:
+                xi, yi = q.popleft()
+                if abs(xi - x) > area or abs(yi - y) > area:
+                    continue
+                if (xi, yi) in visited:
+                    continue
+                if xi in self.points_by_x and yi in self.points_by_x[xi]:
+                    self.count -= 1
+                    self.points_by_x[xi].remove(yi)
+                    return xi, yi
+                visited.add((xi, yi))
+                for vec in self.vecs:
+                    q.append((xi + vec[0], yi + vec[1]))
+            return None, None
+
+
+def solve(pf):
     commands = []
     x, y = 0, 0
     vx, vy = 0, 0
-    for point in points:
+    # pf.count -= 10
+    while pf.count > 0:
+        point = pf.get_next_point(x, y, vx, vy, t_max=10, area=40)
+        if point == (None, None):
+            print("no next point", x, y, vx, vy)
+            return commands + ["5"] * 3
         x_move, vx_ = calc_move1d(x, point[0], vx)
         y_move, vy_ = calc_move1d(y, point[1], vy)
         length = max(len(x_move), len(y_move))
@@ -22,30 +71,55 @@ def solve(points):
         # if (x, y) == (-121, 350):
         #     length += 1
         #  10
-        if (x, y) == (-189, -153):
+        # if (x, y) == (-189, -153):
+        #     length += 1
+        # if (x, y) == (-631, -388):
+        #     length += 1
+        # if (x, y) == (-1000, -579):
+        #     length += 1
+        # if (x, y) == (-1038, -606):
+        #     length += 1
+        # if (x, y) == (-1171, -544):
+        #     length += 1
+        # if (x, y) == (-1228, -536):
+        #     length += 0
+        # if (x, y) == (-1242, -531):
+        #     length += 1
+        # 09
+        if (x, y) == (7, 12):
+            length += 2
+        if (x, y) == (41, 49):
+            length += 2
+        if (x, y) == (63, 57):
             length += 1
-        if (x, y) == (-631, -388):
+        if (x, y) == (148, 153):
             length += 1
-        if (x, y) == (-1000, -579):
+        if (x, y) == (144, 172):
             length += 1
-        if (x, y) == (-1038, -606):
-            length += 1
-        if (x, y) == (-1171, -544):
-            length += 1
-        if (x, y) == (-1228, -536):
-            length += 0
-        if (x, y) == (-1242, -531):
+        if (x, y) == (-21, -101):
             length += 1
         for li in range(length, length + 100):
             vxi, vyi = vx, vy
+            if False:
+                pass
             # 06
             # if (x, y) == (-121, 350):
             #     x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
             #     y_movei, vyi = move_on_time(y, point[1], vy, li, 4)[3]
             # 10
-            if (x, y) == (-1242, -531):
+            # if (x, y) == (-1242, -531):
+            #     x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
+            #     y_movei, vyi = move_on_time(y, point[1], vy, li, 4)[2]
+            # 09
+            elif (x, y) == (7, 12):
                 x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
-                y_movei, vyi = move_on_time(y, point[1], vy, li, 4)[2]
+                y_movei, vyi = move_on_time(y, point[1], vy, li, 10)[0]
+            elif (x, y) == (148, 153):
+                x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
+                y_movei, vyi = move_on_time(y, point[1], vy, li, 10)[1]
+            elif (x, y) == (-21, -101):
+                x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
+                y_movei, vyi = move_on_time(y, point[1], vy, li, 10)[0]
             else:
                 x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
                 y_movei, vyi = move_on_time(y, point[1], vy, li)[0]
@@ -148,7 +222,7 @@ def join_xy_moves(x_move, y_move):
 
 if __name__ == "__main__":
     points = []
-    fname = os.path.join(os.path.dirname(__file__), "../../../problems/spaceship/10a.txt")
+    fname = os.path.join(os.path.dirname(__file__), "../../../problems/spaceship/09.txt")
     with open(fname, "r") as f:
         for line in f:
             if line.strip() == "":
@@ -158,5 +232,7 @@ if __name__ == "__main__":
     # for p in sorted_points:
     #     print(p[0], p[1])
 
-    commands = solve(points)
+    pf = PathFinder(points)
+    commands = solve(pf)
     print("".join(commands))
+    print(len("".join(commands)))
