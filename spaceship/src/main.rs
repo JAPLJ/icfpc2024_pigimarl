@@ -170,12 +170,12 @@ impl Env {
         Env { pts }
     }
 
-    fn calc_a(&self, target: usize, mp: MovingPt) -> (Pt, (usize, Pt)) {
+    fn calc_a(&self, target: usize, mp: MovingPt, lb: Option<i64>) -> (Pt, (usize, Pt)) {
         let mut min_t = usize::MAX;
         let mut min_a = Pt::new(0, 0);
         let mut total_v = Pt::new(0, 0);
 
-        'outer: for total_t in 1.. {
+        'outer: for total_t in lb.unwrap_or(1).. {
             let mut d = self.pts[target] - mp.p;
             d = d - mp.v * total_t;
             let mut first_a = None;
@@ -811,7 +811,7 @@ impl Env {
                 if vis[i] {
                     continue;
                 }
-                let (a, _) = self.calc_a(i, mp);
+                let (a, _) = self.calc_a(i, mp, None);
                 mp.v = mp.v + a;
                 mp.p = mp.p + mp.v;
                 res.push(a.acc_as_tenkey());
@@ -856,9 +856,11 @@ impl Env {
             //     target.unwrap()
             // };
 
+            let mut prev_tm1 = 0;
             while mp.p != self.pts[target] {
                 let mut best_a = None;
                 let mut min_time = usize::MAX;
+                let mut min_tm1 = usize::MAX;
                 for a in 1..=9 {
                     let acc = Pt::from_tenkey(a);
                     let mut mp = mp;
@@ -868,20 +870,23 @@ impl Env {
                         best_a = Some(a);
                         break;
                     }
-                    let (_, (tm1, dv)) = self.calc_a(target, mp);
+                    let (_, (tm1, dv)) =
+                        self.calc_a(target, mp, Some((prev_tm1 as i64 - 3).max(1)));
                     mp.p = self.pts[target];
                     mp.v = mp.v + dv;
                     let nearest = if rem.len() < 2 {
                         0
                     } else {
-                        let (_, (tm2, _)) = self.calc_a(ord[lp + 1], mp);
+                        let (_, (tm2, _)) = self.calc_a(ord[lp + 1], mp, None);
                         tm2
                     };
                     if tm1 + nearest < min_time {
                         min_time = tm1 + nearest;
+                        min_tm1 = tm1;
                         best_a = Some(a);
                     }
                 }
+                prev_tm1 = min_tm1;
                 let best_a = best_a.unwrap();
                 res.push(best_a);
                 mp.v = mp.v + Pt::from_tenkey(best_a);
