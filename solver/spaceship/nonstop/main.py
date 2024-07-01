@@ -3,19 +3,31 @@ from itertools import product
 
 
 def solve(points):
-    sorted_points = sorted(points, key=lambda x: x[1])
+    FORECAST_LENGTH = 2
 
     commands = []
     x, y = 0, 0
     vx, vy = 0, 0
-    for point in sorted_points:
+    for point in points:
         x_move, vx_ = calc_move1d(x, point[0], vx)
         y_move, vy_ = calc_move1d(y, point[1], vy)
         length = max(len(x_move), len(y_move))
+        if (x, y) == (-11, 207):
+            length = 3
+        if (x, y) == (-92, 287):
+            length = 3
+        if (x, y) == (-97, 301):
+            length = 4
+        if (x, y) == (-121, 350):
+            length += 1
         for li in range(length, length + 100):
             vxi, vyi = vx, vy
-            x_movei, vxi = move_on_time(x, point[0], vx, li)
-            y_movei, vyi = move_on_time(y, point[1], vy, li)
+            if (x, y) == (-121, 350):
+                x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
+                y_movei, vyi = move_on_time(y, point[1], vy, li, 4)[3]
+            else:
+                x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
+                y_movei, vyi = move_on_time(y, point[1], vy, li)[0]
             if x_movei and y_movei:
                 vx = vxi
                 vy = vyi
@@ -65,16 +77,21 @@ def calc_move1d(s, t, v):
 
 
 # s から t まで length 時間で移動する
-def move_on_time(s, t, v, length):
+def move_on_time(s, t, v, length, n=1):
+    res = []
     for p in product([-1, 0, 1], repeat=length):
+        if len(res) >= n:
+            break
         pos = s
         vi = v
         for dv in p:
             vi += dv
             pos += vi
         if pos == t:
-            return [list(p), vi]
-    return [None, None]
+            res.append([p, vi])
+    if res:
+        return res
+    return [[None, None]]
     # raise RuntimeError("no solution", s, t, v, length)
 
 
@@ -110,11 +127,15 @@ def join_xy_moves(x_move, y_move):
 
 if __name__ == "__main__":
     points = []
-    fname = os.path.join(os.path.dirname(__file__), "../../../problems/spaceship/06.txt")
+    fname = os.path.join(os.path.dirname(__file__), "../../../problems/spaceship/06a.txt")
     with open(fname, "r") as f:
         for line in f:
             if line.strip() == "":
                 continue
             points.append(list(map(int, line.strip().split())))
+    # sorted_points = sorted(points, key=lambda x: x[1])
+    # for p in sorted_points:
+    #     print(p[0], p[1])
+
     commands = solve(points)
     print("".join(commands))
