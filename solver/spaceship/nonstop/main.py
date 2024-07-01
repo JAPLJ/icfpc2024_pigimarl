@@ -1,6 +1,7 @@
 import os
 from itertools import product
 from collections import defaultdict, deque
+import time
 
 
 class PathFinder:
@@ -24,6 +25,16 @@ class PathFinder:
             x, y = 134, 162
         elif (x, y) == (134, 162):
             x, y = 133, 156
+        elif (x, y) == (136, 175):
+            x, y = 134, 172
+        elif (x, y) == (137, 156):
+            x, y = 137 - vx, 155 - vy
+        elif (x, y) == (137, 155):
+            x, y = 137, 154
+        # elif (x, y) == (137, 156):
+        #     x, y = 133, 156
+        elif (x, y) == (137, 154):
+            x, y = 138, 153
         elif (x, y) == (81, 61):
             x, y = 84, 65
         for t in range(1, t_max + 1):
@@ -52,9 +63,9 @@ def solve(pf):
     commands = []
     x, y = 0, 0
     vx, vy = 0, 0
-    # pf.count -= 10
     while pf.count > 0:
         point = pf.get_next_point(x, y, vx, vy, t_max=10, area=40)
+        print(point)
         if point == (None, None):
             print("no next point", x, y, vx, vy)
             return commands + ["5"] * 3
@@ -92,7 +103,11 @@ def solve(pf):
             length += 2
         if (x, y) == (63, 57):
             length += 1
+        if (x, y) == (136, 159):
+            length += 1
         if (x, y) == (148, 153):
+            length += 1
+        if (x, y) == (141, 175):
             length += 1
         if (x, y) == (144, 172):
             length += 1
@@ -114,6 +129,9 @@ def solve(pf):
             elif (x, y) == (7, 12):
                 x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
                 y_movei, vyi = move_on_time(y, point[1], vy, li, 10)[0]
+            elif (x, y) == (141, 175):
+                x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
+                y_movei, vyi = move_on_time(y, point[1], vy, li, 10)[1]
             elif (x, y) == (148, 153):
                 x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
                 y_movei, vyi = move_on_time(y, point[1], vy, li, 10)[1]
