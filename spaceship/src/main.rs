@@ -1,9 +1,11 @@
+#![allow(dead_code)]
 use std::{
+    collections::{HashMap, VecDeque},
     io,
     ops::{Add, Div, Mul, Sub},
 };
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Pt {
     x: i64,
     y: i64,
@@ -86,7 +88,7 @@ impl Div<i64> for Pt {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct MovingPt {
     p: Pt,
     v: Pt,
@@ -121,7 +123,7 @@ impl Env {
         Env { pts }
     }
 
-    fn calc_a(&self, target: usize, _vis: &[bool], mp: MovingPt) -> Pt {
+    fn calc_a(&self, target: usize, mp: MovingPt) -> Pt {
         let mut min_a = Pt::new(0, 0);
 
         'outer: for total_t in 1.. {
@@ -310,6 +312,75 @@ impl Env {
         res
     }
 
+    fn solve15(&self) -> Vec<usize> {
+        let mut q = VecDeque::new();
+        let ini_vis = self
+            .pts
+            .iter()
+            .position(|&p| p.x == 0 && p.y == 0)
+            .map(|k| 1usize << k)
+            .unwrap_or(0);
+        q.push_back((MovingPt::new(Pt::new(0, 0), Pt::new(0, 0)), ini_vis));
+
+        type St = (MovingPt, usize);
+        let mut dist = HashMap::<St, usize>::new();
+        let mut prev = HashMap::<St, St>::new();
+        dist.insert(q[0], 0);
+
+        let mut most_visited = 0;
+        let mut rst = None;
+        while let Some((mp, vis)) = q.pop_front() {
+            let d = *dist.get(&(mp, vis)).unwrap();
+            let count = vis.count_ones();
+            if count + 3 <= most_visited {
+                continue;
+            }
+            if count > most_visited {
+                eprintln!(
+                    "visited: {} -> {} (queue size {})",
+                    most_visited,
+                    count,
+                    q.len()
+                );
+                most_visited = count;
+            }
+            if count as usize == self.pts.len() {
+                rst = Some((mp, vis));
+                break;
+            }
+
+            for ax in -1..=1 {
+                for ay in -1..=1 {
+                    let nv = mp.v + Pt::new(ax, ay);
+                    let np = mp.p + nv;
+                    let nmp = MovingPt::new(np, nv);
+                    let nvis = vis
+                        | self
+                            .pts
+                            .iter()
+                            .position(|&p| p == np)
+                            .map(|k| 1 << k)
+                            .unwrap_or(0);
+                    let nst = (nmp, nvis);
+                    if dist.insert(nst, d + 1) == None {
+                        q.push_back(nst);
+                        prev.insert(nst, (mp, vis));
+                    }
+                }
+            }
+        }
+
+        let mut rst = rst.unwrap();
+        let mut res = vec![];
+        while let Some(pst) = prev.get(&rst) {
+            res.push((rst.0.v - pst.0.v).acc_as_tenkey());
+            rst = *pst;
+        }
+        res.reverse();
+
+        res
+    }
+
     fn solve(&self) -> Vec<usize> {
         let mut mp = MovingPt::new(Pt::new(0, 0), Pt::new(0, 0));
         let mut vis = vec![false; self.pts.len()];
@@ -357,7 +428,7 @@ impl Env {
                 if vis[i] {
                     continue;
                 }
-                let a = self.calc_a(i, &vis, mp);
+                let a = self.calc_a(i, mp);
                 mp.v = mp.v + a;
                 mp.p = mp.p + mp.v;
                 res.push(a.acc_as_tenkey());
@@ -372,7 +443,7 @@ impl Env {
 fn main() {
     let env = Env::new(read_input());
 
-    let res = env.solve();
+    let res = env.solve15();
 
     eprintln!("commands: {}", res.len());
     for r in res {
