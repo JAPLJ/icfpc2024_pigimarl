@@ -54,7 +54,7 @@ class Expr:
         return BinaryOp("D", other, self)
 
     def __call__(self, other):
-        return BinaryOp("$", self, other)
+        return BinaryOp("~", self, other)
 
 
 class Bool(Expr):
