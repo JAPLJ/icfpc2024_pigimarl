@@ -21,14 +21,30 @@ class PathFinder:
         # 09
         if (x, y) == (137, 165):
             x, y = 136, 159
-        elif (x, y) == (135, 158):
-            x, y = 134, 162
+        # elif (x, y) == (78, 62):
+        #     self.count -= 1
+        #     self.points_by_x[80].remove(66)
+        #     return 80, 66
         elif (x, y) == (134, 162):
-            x, y = 133, 156
+            self.count -= 1
+            self.points_by_x[132].remove(160)
+            return 132, 160
+        elif (x, y) == (136, 159):
+            x, y = 135 - vx, 158 - vy
+        elif (x, y) == (135, 158):
+            self.count -= 1
+            self.points_by_x[133].remove(156)
+            return 133, 156
+        elif (x, y) == (133, 156):
+            self.count -= 1
+            self.points_by_x[136].remove(153)
+            return 136, 153
         elif (x, y) == (136, 175):
             x, y = 134, 172
         elif (x, y) == (137, 156):
-            x, y = 137 - vx, 155 - vy
+            self.count -= 1
+            self.points_by_x[134].remove(162)
+            return 134, 162
         elif (x, y) == (137, 155):
             x, y = 137, 154
         # elif (x, y) == (137, 156):
@@ -65,7 +81,6 @@ def solve(pf):
     vx, vy = 0, 0
     while pf.count > 0:
         point = pf.get_next_point(x, y, vx, vy, t_max=10, area=40)
-        print(point)
         if point == (None, None):
             print("no next point", x, y, vx, vy)
             return commands + ["5"] * 3
@@ -101,7 +116,15 @@ def solve(pf):
             length += 2
         if (x, y) == (41, 49):
             length += 2
+        if (x, y) == (73, 61):
+            length += 1
         if (x, y) == (63, 57):
+            length += 1
+        if (x, y) == (90, 17):
+            length += 1
+        if (x, y) == (135, 158):
+            length += 1
+        if (x, y) == (137, 156):
             length += 1
         if (x, y) == (136, 159):
             length += 1
@@ -138,6 +161,12 @@ def solve(pf):
             elif (x, y) == (-21, -101):
                 x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
                 y_movei, vyi = move_on_time(y, point[1], vy, li, 10)[0]
+            elif (x, y) == (70, 58):
+                x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
+                y_movei, vyi = move_on_time(y, point[1], vy, li, 10)[1]
+            elif (x, y) == (137, 156):
+                x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
+                y_movei, vyi = move_on_time(y, point[1], vy, li, 10)[3]
             else:
                 x_movei, vxi = move_on_time(x, point[0], vx, li)[0]
                 y_movei, vyi = move_on_time(y, point[1], vy, li)[0]
